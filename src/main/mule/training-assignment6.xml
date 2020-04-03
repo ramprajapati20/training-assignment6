@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="a80221b9-b697-4eb3-b058-54613f1b2f02" >
+		<file:connection workingDir="C:\Users\rampraja1\AnypointStudio\studio-workspace\training-assignment6" />
+	</file:config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="bc859577-57ad-427e-a595-81b71e81e351" >
+		<salesforce:cached-basic-connection username="ram.prajapati@publicissapient.com" password="Welcome@2020" securityToken="43YVF0Z5ptNY0ztw4KRla1nx" />
+	</salesforce:sfdc-config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="c77520a7-472a-4729-873c-99b4c7908043" >
+		<file:connection workingDir="C:\Users\rampraja1\AnypointStudio\studio-workspace\training-assignment6" />
+	</file:config>
+	<flow name="training-assignment6Flow" doc:id="72cf418f-d94d-466e-a0ea-1e46dd04124c" >
+		<file:listener doc:id="36b073ae-3166-4eaf-87c5-8bc2f376274a" config-ref="File_Config" directory="src\main\resources\input" autoDelete="true" moveToDirectory="output" applyPostActionWhenFailed="false">
+			<redelivery-policy />
+			<scheduling-strategy >
+				<fixed-frequency frequency="20000" />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="41713ecf-3702-4f64-ac02-dd9e60431a2c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map(account, indexOfAccount) ->
+{
+	LastName: account.LastName,
+	FirstName: account.FirstName,
+	OtherCity: account.City,
+	OtherState: account.StateORProvince,
+	OtherPostalCode: account."ZIPORPostal Code",
+	OtherCountry: account.CountryORRegion,
+	Fax: account.Fax,
+	MobilePhone: account.MobilePhone,
+	HomePhone: account.OfficePhone,
+	OtherPhone: account.OfficeNumber,
+	Title: account.JobTitle,
+	Department: account.JobTitle
+}
+	
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Contact" doc:id="ce0a5746-34a2-49bf-95c5-30acb161abdb" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="9efa5e8f-f181-4be5-96c8-d51c11e7c264" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="3b134a46-599f-4e7f-8db5-e9383aa12ca8" config-ref="File_Config1" path="src\main\resources\output\account-data.json" createParentDirectories="false"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3977af3c-e9a0-4f6a-93e2-4360551f4251" />
+	</flow>
+</mule>
